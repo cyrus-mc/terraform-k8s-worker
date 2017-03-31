@@ -1,0 +1,204 @@
+#cloud-config
+
+---
+coreos:
+  update:
+    reboot-strategy: etcd-lock
+
+  units:
+    - name: etcd2.service
+      command: stop
+    - name: fleet.service
+      command: stop
+    - name: format-ephemeral.service
+      command: start
+      content: |
+        [Unit]
+        Description=Formats the ephemeral drive
+        After=dev-xvdb.device
+        Requires=dev-xvdb.device
+        [Service]
+        ExecStart=/usr/sbin/wipefs -f /dev/xvdb
+        ExecStart=/usr/sbin/mkfs.ext4 -F /dev/xvdb
+        RemainAfterExit=yes
+        Type=oneshot
+    - name: var-lib-docker.mount
+      command: start
+      content: |
+        [Unit]
+        Description=Mount ephemeral to /var/lib/docker
+        Requires=format-ephemeral.service
+        After=format-ephemeral.service
+        Before=docker.service
+        [Mount]
+        What=/dev/xvdb
+        Where=/var/lib/docker
+        Type=ext4
+    - name: flanneld.service
+      command: start
+      drop-ins:
+        - name: 40-ExecStartPre-symlink.conf
+          content: |
+            [Service]
+            ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
+    - name: docker.service
+      command: start
+      drop-ins:
+        - name: 40-flannel.conf
+          content: |
+            [Unit]
+            Requires=flanneld.service
+            After=flanneld.service
+
+            [Service]
+            EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
+    - name: k8s-get-certificates.service
+      command: start
+      content: |
+        [Unit]
+        After=network-online.target
+        Description=Retrieve certificates from S3 used by Kubernetes cluster
+        Requires=network-online.target
+        [Service]
+        ExecStartPre=-/usr/bin/mkdir -p /opt/bin
+        ExecStartPre=-/usr/bin/mkdir -p /etc/kubernetes/ssl
+        ExecStartPre=-/usr/bin/chmod +x /root/get-certificates.sh
+        ExecStart=/root/get-certificates.sh
+        RemainAfterExit=yes
+        Type=oneshot
+    - name: kubelet.service
+      command: start
+      content: |
+        [Unit]
+        ConditionFileIsExecutable=/usr/lib/coreos/kubelet-wrapper
+
+        [Service]
+        Environment=KUBELET_IMAGE_TAG=${K8S-VERSION}
+        Environment="RKT_RUN_ARGS=--uuid-file-save=/var/run/kubelet-pod.uuid \
+          --volume dns,kind=host,source=/etc/resolv.conf \
+          --mount volume=dns,target=/etc/resolv.conf \
+          --volume var-log,kind=host,source=/var/log \
+          --mount volume=var-log,target=/var/log"
+        ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+        ExecStartPre=/usr/bin/mkdir -p /var/log/containers
+        ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/kubelet-pod.uuid
+        ExecStart=/usr/lib/coreos/kubelet-wrapper \
+          --api-servers=https://${API_ELB} \
+          --cni-conf-dir=/etc/kubernetes/cni/net.d \
+          --network-plugin=${NETWORK_PLUGIN} \
+          --container-runtime=docker \
+          --register-node=true \
+          --allow-privileged=true \
+          --pod-manifest-path=/etc/kubernetes/manifests \
+          --hostname-override=$private_ipv4 \
+          --cluster_dns=${DNS_SERVICE_IP} \
+          --cluster_domain=cluster.local \
+          --cloud-provider=aws \
+          --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+          --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+          --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
+        ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/kubelet-pod.uuid
+        Restart=always
+        RestartSec=10
+
+        [Install]
+        WantedBy=multi-user.target
+
+write-files:
+  - path: /root/get-certificates.sh
+    content: |
+      #!/bin/bash
+
+      # retrieve S3 utility
+      /usr/bin/curl -L -o /opt/bin/s3-get-presigned-url https://github.com/kz8s/s3-get-presigned-url/releases/download/v0.1/s3-get-presigned-url_linux_amd64
+                                                                                                             # make executable
+      chmod +x /opt/bin/s3-get-presigned-url                                                           
+      # get API key and certificate as well as the CA certificate
+      for file in ca.pem worker-key.pem worker.pem; do
+        /usr/bin/curl $(/opt/bin/s3-get-presigned-url ${AWS_REGION} smarsh-k8s-${CLUSTER_NAME} $file) -o /etc/kubernetes/ssl/$file
+      done 
+  - path: /etc/kubernetes/manifests/kube-proxy.yaml
+    content: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: kube-proxy
+        namespace: kube-system
+      spec:
+        hostNetwork: true
+        containers:
+        - name: kube-proxy
+          image: quay.io/coreos/hyperkube:${K8S-VERSION}
+          command:
+          - /hyperkube
+          - proxy
+          - --master=https://${API_ELB}
+          - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - mountPath: /etc/ssl/certs
+            name: "ssl-certs"
+          - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+            name: "kubeconfig"
+            readOnly: true
+          - mountPath: /etc/kubernetes/ssl
+            name: "etc-kube-ssl"
+            readOnly: true
+        volumes:
+        - name: "ssl-certs"
+          hostPath:
+            path: "/usr/share/ca-certificates"
+        - name: "kubeconfig"
+          hostPath:
+            path: "/etc/kubernetes/worker-kubeconfig.yaml"
+        - name: "etc-kube-ssl"
+          hostPath:
+            path: "/etc/kubernetes/ssl"
+  - path: /etc/kubernetes/worker-kubeconfig.yaml
+    content: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+      - name: local
+        cluster:
+          certificate-authority: /etc/kubernetes/ssl/ca.pem
+      users:
+      - name: kubelet
+        user:
+          client-certificate: /etc/kubernetes/ssl/worker.pem
+          client-key: /etc/kubernetes/ssl/worker-key.pem
+      contexts:
+      - context:
+          cluster: local
+          user: kubelet
+        name: kubelet-context
+      current-context: kubelet-context
+  - path: /etc/flannel/options.env
+    content: |
+      FLANNELD_IFRACE=$private_ipv4
+      FLANNELD_ETCD_ENDPOINTS=http://${ETCD_ELB}:2379
+  - path: /etc/kubernetes/cni/docker_opts_cni.env
+    content: |
+      DOCKER_OPT_BIP=""
+      DOCKER_OPT_IPMASQ=""
+  - path: /etc/kubernetes/cni/net.d/10-flannel.conf
+    content: |
+      {
+        "name": "podnet",
+        "type": "flannel",
+        "delegate": {
+          "isDefaultGateway": true
+        }
+      }
+  - path: /etc/logrotate.d/docker-containers
+    content: |
+      /var/lib/docker/containers/*/*.log {
+        rotate 7
+        daily
+        compress
+        size=1M
+        missingok
+        delaycompress
+        copytruncate
+      }
