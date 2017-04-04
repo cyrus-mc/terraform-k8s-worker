@@ -15,7 +15,7 @@ resource "aws_launch_configuration" "k8s-worker" {
 
   iam_instance_profile = "${var.iam_instance_profile}"
 
-  key_name      = "matthew.ceroni"
+  key_name      = "${var.key_pair}"
 
   # user data supplied to provision each instance
   user_data = "${data.template_file.cloud-config.rendered}"
@@ -38,9 +38,9 @@ resource "aws_autoscaling_group" "k8s-worker" {
 
   force_delete = true
 
-  min_size         = 1
-  max_size         = 5
-  desired_capacity = 1
+  min_size         = "${var.auto_scaling_min_size}"
+  max_size         = "${var.auto_scaling_max_size}"
+  desired_capacity = "${var.auto_scaling_desired_capacity}"
 
   # what subnets to launch in
   vpc_zone_identifier = [ "${var.subnets}" ]
