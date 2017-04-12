@@ -42,7 +42,7 @@ resource "aws_autoscaling_group" "k8s-worker" {
   max_size         = "${var.auto_scaling_max_size}"
   desired_capacity = "${var.auto_scaling_desired_capacity}"
 
-  # what subnets to launch in
+  /* subnet(s) to launch instances in */
   vpc_zone_identifier = [ "${var.subnets}" ]
 
   tag {
@@ -59,7 +59,7 @@ resource "aws_autoscaling_group" "k8s-worker" {
 
   tag {
     key                 = "KubernetesCluster"
-    value               = "cluster"
+    value               = "${var.name}"
     propagate_at_launch = true
   }
 
