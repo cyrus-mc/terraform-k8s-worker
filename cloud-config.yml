@@ -69,8 +69,7 @@ write-files:
 
       cat <<EOF
       {
-        "cluster-name" : "${CLUSTER_NAME}",
-        "hostname" : "${HOSTNAME}",
+        "cluster_name" : "${CLUSTER_NAME}",
         "etcd_elb" : "${ETCD_ELB}"
         "api_elb" : "${API_ELB}"
       }
