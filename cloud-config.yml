@@ -70,7 +70,7 @@ write-files:
       cat <<EOF
       {
         "cluster_name" : "${CLUSTER_NAME}",
-        "etcd_elb" : "${ETCD_ELB}"
+        "etcd_elb" : "${ETCD_ELB}",
         "api_elb" : "${API_ELB}"
       }
       EOF
@@ -147,3 +147,10 @@ write-files:
 
       # install needed modules
       $PYPY_HOME/bin/pip install docker-py
+      $PYPY_HOME/bin/pip install boto
+
+      # now phone home to Ansible tower
+      hname=$(hostname -i)
+      curl --insecure -f -H 'Content-Type: application/json' -XPOST \
+        -d '{ "host_config_key": "118ff967ede72f714d166315e4850544", "extra_vars": "{\"hostname\": \"'"$hname"'\"}" }' \
+        https://ansible-tower.services.aws:443/api/v1/job_templates/39/callback/
