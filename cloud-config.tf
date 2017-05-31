@@ -8,6 +8,8 @@ data "template_file" "cloud-config" {
   vars {
     CLUSTER_NAME     = "${var.name}"
 
+    LABELS           = "${var.node_labels}"
+
     K8S-VERSION      = "v1.5.4_coreos.0"
 
     AWS_REGION       = "${var.region}"

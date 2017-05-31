@@ -71,7 +71,8 @@ write-files:
       {
         "cluster_name" : "${CLUSTER_NAME}",
         "etcd_elb" : "${ETCD_ELB}",
-        "api_elb" : "${API_ELB}"
+        "api_elb" : "${API_ELB}",
+        "labels" : "${LABELS}"
       }
       EOF
   - path: /root/get-certificates.sh

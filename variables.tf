@@ -29,6 +29,11 @@ variable "service_ip_range" {
   description = "Service IP network"
 }
 
+variable "node_labels" {
+  description = "Labels to assign node (key=value comman separated)"
+  default     = ""
+}
+
 variable "iam_instance_profile" {
   description = "IAM instance profile associated with worker instances"
 }
