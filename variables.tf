@@ -31,7 +31,7 @@ variable "service_ip_range" {
 
 variable "node_labels" {
   description = "Labels to assign node (key=value comman separated)"
-  default     = ""
+  type        = "map"
 }
 
 variable "iam_instance_profile" {
