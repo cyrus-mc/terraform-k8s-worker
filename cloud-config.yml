@@ -17,6 +17,7 @@ coreos:
         Description=Formats the ephemeral drive
         After=dev-xvdb.device
         Requires=dev-xvdb.device
+        ConditionPathExists=!/home/core/.bootstrapped
         [Service]
         ExecStart=/usr/sbin/wipefs -f /dev/xvdb
         ExecStart=/usr/sbin/mkfs.ext4 -F /dev/xvdb
@@ -41,6 +42,7 @@ coreos:
         After=network-online.target
         Description=Bootstrap Ansible
         Requires=network-online.target
+        ConditionPathExists=!/home/core/.bootstrapped
         [Service]
         ExecStart=/home/core/bootstrap-ansible.sh
         RemainAfterExit=yes
@@ -155,3 +157,5 @@ write-files:
       curl --insecure -f -H 'Content-Type: application/json' -XPOST \
         -d '{ "host_config_key": "118ff967ede72f714d166315e4850544", "extra_vars": "{\"hostname\": \"'"$hname"'\"}" }' \
         https://ansible-tower.services.aws:443/api/v1/job_templates/39/callback/
+
+      touch $PKG_HOME/.bootstrapped
