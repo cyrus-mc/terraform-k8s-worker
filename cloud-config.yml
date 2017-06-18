@@ -73,6 +73,7 @@ write-files:
       {
         "cluster_name" : "${CLUSTER_NAME}",
         "etcd_elb" : "${ETCD_ELB}",
+        "etcd_serves" : ${ETCD_SERVERS},
         "api_elb" : "${API_ELB}",
         "labels" : ${LABELS}
       }

@@ -15,10 +15,11 @@ data "template_file" "cloud-config" {
     AWS_REGION       = "${var.region}"
 
     /* Point at the etcd ELB */
-    ETCD_ELB         = "etcd.${var.name}.${var.internal-tld}"
+    ETCD_ELB         = "${var.etcd_elb}"
+    ETCD_SERVERS     = "${jsonencode(var.etcd_servers)}"
 
     /* point at the API service ELB */
-    API_ELB          = "apiserver.${var.name}.${var.internal-tld}"
+    API_ELB          = "${var.api_elb}"
 
     DNS_SERVICE_IP   = "${cidrhost(var.service_ip_range, 10)}"
 

@@ -7,6 +7,19 @@ variable "internal-tld" {
   default     = "k8s"
 }
 
+variable "api_elb" {
+  description = "Kubernetes API server Elastic Load Balancer"
+}
+
+variable "etcd_elb" {
+  description = "Etcd Elastic Load Balancer"
+}
+
+variable "etcd_servers" {
+  description = "Etcd server list"
+  type        = "list"
+}
+
 variable "name" {
   description = "Cluster name"
 }
