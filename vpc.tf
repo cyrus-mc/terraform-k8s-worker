@@ -5,8 +5,6 @@
 
 resource "aws_security_group" "inbound-outbound" {
 
-  name = "kubernetes-worker-${var.name}"
-
   description = "Define inbound and outbound traffic for Kubernetes Worker server nodes"
 
   /* link to the correct VPC */
