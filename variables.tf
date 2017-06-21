@@ -1,3 +1,7 @@
+variable "vpc_id" {
+  description = "ID of the VPC where the Kubernetes cluster will be deployed"
+}
+
 variable "region" {
   description = "AWS region where the K8s worker nodes will be deployed"
 }
