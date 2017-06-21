@@ -17,6 +17,8 @@ resource "aws_launch_configuration" "k8s-worker" {
 
   key_name      = "${var.key_pair}"
 
+  security_groups = [ "${aws_security_group.inbound-outbound.id}" ]
+
   # user data supplied to provision each instance
   user_data = "${data.template_file.cloud-config.rendered}"
 
