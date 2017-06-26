@@ -3,7 +3,12 @@
 */
 resource "aws_launch_configuration" "k8s-worker" {
 
-  # block device where container images will be stored (/var/lib/docker)
+  /* increase root device space */
+  root_block_device {
+    volume_size = "100"
+  }
+
+  /* add additional volume (/var/lib/docker) */
   ebs_block_device {
     device_name = "/dev/xvdb"
     volume_size = "100"
