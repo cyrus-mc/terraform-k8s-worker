@@ -11,7 +11,7 @@ resource "aws_launch_configuration" "k8s-worker" {
   /* add additional volume (/var/lib/docker) */
   ebs_block_device {
     device_name = "/dev/xvdb"
-    volume_size = "100"
+    volume_size = "500"
     volume_type = "gp2"
   }
 
