@@ -70,3 +70,11 @@ variable "auto_scaling_max_size" {
 variable "auto_scaling_desired_capacity" {
   description = "The number of Amazon EC2 instances that should be running in the group"
 }
+
+variable "ansible_server" {
+  description = "FQDN or IP of the Ansible server"
+}
+
+variable "ansible_callback" {}
+
+variable "ansible_host_key" {}

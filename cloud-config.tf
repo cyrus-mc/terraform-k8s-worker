@@ -24,6 +24,10 @@ data "template_file" "cloud-config" {
     DNS_SERVICE_IP   = "${cidrhost(var.service_ip_range, 10)}"
 
     NETWORK_PLUGIN   = "cni"
+
+    ANSIBLE_HOST_KEY     = "${var.ansible_host_key}"
+    ANSIBLE_CALLBACK_URL = "https://${var.ansible_server}/api/v1/job_templates/${var.ansible_callback}/callback/"
+
   }
 
 }
