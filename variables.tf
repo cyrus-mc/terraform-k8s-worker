@@ -21,7 +21,6 @@ variable "etcd_elb" {
 
 variable "etcd_servers" {
   description = "Etcd server list"
-  type        = "list"
 }
 
 variable "name" {
