@@ -6,11 +6,6 @@ variable "region" {
   description = "AWS region where the K8s worker nodes will be deployed"
 }
 
-variable "internal-tld" {
-  description = "Top-level domain for K8s clusters (defaults to k8s)"
-  default     = "k8s"
-}
-
 variable "api_elb" {
   description = "Kubernetes API server Elastic Load Balancer"
 }
