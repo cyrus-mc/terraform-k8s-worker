@@ -26,7 +26,7 @@ data "template_file" "cloud-config" {
     NETWORK_PLUGIN   = "cni"
 
     ANSIBLE_HOST_KEY     = "${var.ansible_host_key}"
-    ANSIBLE_CALLBACK_URL = "https://${var.ansible_server}/api/v1/job_templates/${var.ansible_callback}/callback/"
+    ANSIBLE_CALLBACK_URL = "${var.ansible_callback}"
 
   }
 

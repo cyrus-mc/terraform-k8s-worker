@@ -15,7 +15,7 @@ resource "aws_launch_configuration" "k8s-worker" {
     volume_type = "gp2"
   }
 
-  image_id      = "${var.ami}"
+  image_id      = "${lookup(var.ami, var.region)}"
   instance_type = "${var.instance_type}"
 
   iam_instance_profile = "${var.iam_instance_profile}"
@@ -45,9 +45,9 @@ resource "aws_autoscaling_group" "k8s-worker" {
 
   force_delete = true
 
-  min_size         = "${var.auto_scaling_min_size}"
-  max_size         = "${var.auto_scaling_max_size}"
-  desired_capacity = "${var.auto_scaling_desired_capacity}"
+  min_size         = "${lookup(var.auto_scaling, "min")}"
+  max_size         = "${lookup(var.auto_scaling, "max")}"
+  desired_capacity = "${lookup(var.auto_scaling, "desired")}"
 
   /* subnet(s) to launch instances in */
   vpc_zone_identifier = [ "${var.subnets}" ]

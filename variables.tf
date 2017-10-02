@@ -6,11 +6,6 @@ variable "region" {
   description = "AWS region where the K8s worker nodes will be deployed"
 }
 
-variable "internal-tld" {
-  description = "Top-level domain for K8s clusters (defaults to k8s)"
-  default     = "k8s"
-}
-
 variable "api_elb" {
   description = "Kubernetes API server Elastic Load Balancer"
 }
@@ -29,6 +24,10 @@ variable "name" {
 
 variable "ami" {
   description = "The Amazon Machine Image (AMI)"
+  type        = "map"
+  default {
+    "us-west-2" = "ami-37ee6357"
+  }
 }
 
 variable "instance_type" {
@@ -43,6 +42,7 @@ variable "subnets" {
 
 variable "service_ip_range" {
   description = "Service IP network"
+  default     = "10.3.0.0/24"
 }
 
 variable "node_labels" {
@@ -58,22 +58,18 @@ variable "key_pair" {
   description = "SSH key-pair to attach to K8s nodes"
 }
 
-variable "auto_scaling_min_size" {
-  description = "Auto-scaling group minimum size"
+variable "auto_scaling" {
+  description = "Auto Scaling Group min, max size and desired capacity"
+  type = "map"
+  default {
+    "min"     = "1"
+    "max"     = "1"
+    "desired" = "1"
+  }
 }
 
-variable "auto_scaling_max_size" {
-  description = "Auto-scaling group maximum size"
+variable "ansible_callback" {
 }
 
-variable "auto_scaling_desired_capacity" {
-  description = "The number of Amazon EC2 instances that should be running in the group"
+variable "ansible_host_key" {
 }
-
-variable "ansible_server" {
-  description = "FQDN or IP of the Ansible server"
-}
-
-variable "ansible_callback" {}
-
-variable "ansible_host_key" {}
