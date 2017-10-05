@@ -26,7 +26,8 @@ variable "ami" {
   description = "The Amazon Machine Image (AMI)"
   type        = "map"
   default {
-    "us-west-2" = "ami-37ee6357"
+    "us-west-2"     = "ami-37ee6357"
+    "us-gov-west-1" = "ami-05971364"
   }
 }
 
