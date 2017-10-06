@@ -15,6 +15,7 @@ variable "etcd_elb" {
 }
 
 variable "etcd_servers" {
+  type        = "list"
   description = "Etcd server list"
 }
 
@@ -73,4 +74,5 @@ variable "ansible_callback" {
 }
 
 variable "ansible_host_key" {
+  default = "kubernetes-worker"
 }
