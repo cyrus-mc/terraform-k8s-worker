@@ -37,7 +37,7 @@ variable "instance_type" {
   default     = "t2.large"
 }
 
-variable "subnets" {
+variable "subnet_id" {
   description = "List of subnets where instances will be deployed to"
   type        = "list"
 }

@@ -50,7 +50,7 @@ resource "aws_autoscaling_group" "k8s-worker" {
   desired_capacity = "${lookup(var.auto_scaling, "desired")}"
 
   /* subnet(s) to launch instances in */
-  vpc_zone_identifier = [ "${var.subnets}" ]
+  vpc_zone_identifier = [ "${var.subnet_id}" ]
 
   tag {
     key                 = "Name"
